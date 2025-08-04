@@ -64,6 +64,4 @@ public class Board {
     public boolean gameFineshed(){
         return  haError() && getStatus().equals(COMPLETE);
     }
-
-    //Consumindo o Projeto -> Proxima aula
 }
