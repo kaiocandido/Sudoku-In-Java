@@ -1,5 +1,6 @@
 import Model.Board;
 import Model.Space;
+import Ultil.BoardTemplates;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,6 +9,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.Scanner;
 
+import static Ultil.BoardTemplates.BOARD_TEMPLATE;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 
@@ -60,7 +62,7 @@ public class Main {
         for (int i = 0; i < BOARD_LIMIT; i++) {
             spaces.add(new ArrayList<>());
             for (int j = 0; j < BOARD_LIMIT; j++) {
-                var positionConfig = positions.get("%s,%s".formatted(i, j));
+                var positionConfig = positions.getOrDefault("%s,%s".formatted(i, j), "0,false");
                 var expected = Integer.parseInt(positionConfig.split(",")[0]);
                 var fixed = Boolean.parseBoolean(positionConfig.split(",")[1]);
                 var currentSpace = new Space(expected, fixed);
@@ -107,15 +109,70 @@ public class Main {
 
 
     private static void showCurrentGame() {
+        if (isNull(board)){
+            System.out.println("Jogo ainda não foi iniciado");
+            return;
+        }
+        var args = new Object[81];
+        var argPoss = 0;
+        for (int i = 0; i < BOARD_LIMIT; i++) {
+            for (var col : board.getSpaces()){
+                args[argPoss ++] = " " + (isNull(col.get(i).getActual()) ? " " : col.get(i).getActual());
+            }
+        }
+
+        System.out.println("Seu jogo se encontra da seguinte forma");
+        System.out.printf(BOARD_TEMPLATE.formatted(args));
     }
 
     private static void showGameStatus() {
+        if (isNull(board)){
+            System.out.println("Jogo ainda não foi iniciado");
+            return;
+        }
+
+        System.out.printf("O jogo atualmente se encontra no status %s\n", board.getStatus().getLabel());
+
+        if (board.haError()){
+            System.out.println("O jogo contem erros");
+        }else{
+            System.out.println("O jogo não possui erros");
+        }
     }
 
     private static void clearGame() {
+        if (isNull(board)){
+            System.out.println("Jogo ainda não foi iniciado");
+            return;
+        }
+
+        System.out.println("Voce realmente quer limpar o jogo? Tem certeza!!");
+        var confirm = scanner.next();
+        while (!confirm.equalsIgnoreCase("sim") || !confirm.equalsIgnoreCase("não")){
+            System.out.println("Informe a sim ou não:");
+            confirm = scanner.next();
+        }
+
+        if (confirm.equalsIgnoreCase("sim")){
+            board.reset();
+        }
     }
 
     private static void finishGame() {
+        if (isNull(board)){
+            System.out.println("Jogo ainda não foi iniciado");
+            return;
+        }
+
+        if (board.gameFineshed()){
+            System.out.println("Parabens Jogo Concluido!!");
+            showCurrentGame();
+            board = null;
+        }else if(board.haError()) {
+            System.out.println("Seu contém erros verifique seu board e ajuste");
+        }else {
+            System.out.println("Contém alguma posição vazia, precisa preencher algum espaço");
+        }
     }
 
     private static int runUntiGetValidNumber(final int min, final int max){
@@ -126,6 +183,4 @@ public class Main {
         }
         return current;
     }
-
-    //construindo currentGame
 }
